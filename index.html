@@ -35,19 +35,22 @@
             <ul id="tracking-info">
                 <li><em>Loading static user data...</em></li>
             </ul>
-            
+
             <h3>Real-Time Activity</h3>
             <ul id="real-time-info">
                 <li><strong>Cursor Position:</strong> <span id="track-cursor">X: 0, Y: 0</span></li>
                 <li><strong>Time on Page:</strong> <span id="track-time">0s</span></li>
                 <li><strong>Scroll Depth:</strong> <span id="track-scroll">0px</span></li>
                 <li><strong>Total Clicks:</strong> <span id="track-clicks">0</span></li>
+                <li><strong>Last Key Pressed:</strong> <span id="track-keys">None</span></li>
+                <li><strong>Highlighted Text:</strong> <span id="track-selection">None</span></li>
+                <li><strong>Tab Visibility:</strong> <span id="track-visibility">Active</span></li>
             </ul>
 
             <script>
                 document.addEventListener("DOMContentLoaded", () => {
                     const infoList = document.getElementById('tracking-info');
-                    
+
                     const data = {
                         'User Agent': navigator.userAgent,
                         'Platform': navigator.platform || (navigator.userAgentData && navigator.userAgentData.platform) || 'Unknown',
@@ -61,8 +64,21 @@
                         'Logical Processors (Cores)': navigator.hardwareConcurrency || 'Unknown',
                         'Device Memory': navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'Unknown',
                         'Connection Type': navigator.connection ? navigator.connection.effectiveType : 'Unknown',
-                        'Referrer': document.referrer || 'None'
+                        'Referrer': document.referrer || 'None',
+                        'Dark Mode Preference': window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Dark' : 'Light',
+                        'Touch Screen Allowed': navigator.maxTouchPoints > 0 ? 'Yes' : 'No'
                     };
+
+                    try {
+                        const canvas = document.createElement('canvas');
+                        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                        if (gl) {
+                            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                            if (debugInfo) {
+                                data['Graphics Card (GPU)'] = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                            }
+                        }
+                    } catch(e) {}
 
                     infoList.innerHTML = '';
                     for (const [key, value] of Object.entries(data)) {
@@ -70,12 +86,55 @@
                         li.innerHTML = `<strong>${key}:</strong> ${value}`;
                         infoList.appendChild(li);
                     }
-                    
+
+                    fetch('https://ipapi.co/json/')
+                        .then(response => response.json())
+                        .then(ipData => {
+                            const newMetrics = {
+                                'IP Address': ipData.ip || 'Unknown',
+                                'Location (City)': ipData.city || 'Unknown',
+                                'Location (Region/Country)': `${ipData.region || 'Unknown'}, ${ipData.country_name || 'Unknown'}`,
+                                'Internet Provider (ISP)': ipData.org || ipData.asn || 'Unknown'
+                            };
+                            for (const [key, value] of Object.entries(newMetrics)) {
+                                const li = document.createElement('li');
+                                li.innerHTML = `<strong>${key}:</strong> ${value}`;
+                                infoList.appendChild(li);
+                            }
+                        })
+                        .catch(() => {
+                            const li = document.createElement('li');
+                            li.innerHTML = `<strong>IP Address:</strong> <em>AdBlocker stopped request</em>`;
+                            infoList.appendChild(li);
+                        });
+
+                    if ('getBattery' in navigator) {
+                        navigator.getBattery().then(battery => {
+                            const addBattery = () => {
+                                let batteryLi = document.getElementById('track-battery');
+                                if (!batteryLi) {
+                                    batteryLi = document.createElement('li');
+                                    batteryLi.id = 'track-battery';
+                                    infoList.appendChild(batteryLi);
+                                }
+                                const level = Math.round(battery.level * 100) + '%';
+                                const charging = battery.charging ? '(Plugged In)' : '(Unplugged)';
+                                batteryLi.innerHTML = `<strong>Battery Status:</strong> ${level} ${charging}`;
+                            };
+                            addBattery();
+                            battery.addEventListener('levelchange', addBattery);
+                            battery.addEventListener('chargingchange', addBattery);
+                        });
+                    }
+
                     const cursorEl = document.getElementById('track-cursor');
                     const timeEl = document.getElementById('track-time');
                     const scrollEl = document.getElementById('track-scroll');
                     const clicksEl = document.getElementById('track-clicks');
-                    
+                    const keysEl = document.getElementById('track-keys');
+                    const selectionEl = document.getElementById('track-selection');
+                    const visibilityEl = document.getElementById('track-visibility');
+
                     let startTime = Date.now();
                     let clickCount = 0;
 
@@ -96,6 +155,19 @@
                         const elapsed = Math.floor((Date.now() - startTime) / 1000);
                         timeEl.textContent = `${elapsed}s`;
                     }, 1000);
+
+                    document.addEventListener('keydown', (e) => {
+                        keysEl.textContent = e.key === ' ' ? 'Spacebar' : e.key;
+                    });
+
+                    document.addEventListener('selectionchange', () => {
+                        const selected = window.getSelection().toString();
+                        selectionEl.textContent = selected.length > 0 ? `"${selected}"` : 'None';
+                    });
+                    
+                    document.addEventListener('visibilitychange', () => {
+                        visibilityEl.textContent = document.hidden ? 'Background / Hidden' : 'Active';
+                    });
                 });
             </script>
         </section>
