@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>James - Personal Site</title>
+    <title>James</title>
 </head>
 
 <body>
@@ -16,7 +16,8 @@
     <main>
         <section>
             <h3>About Me</h3>
-            <p>Welcome to my personal slice of the internet. I am a computer engineering student at the University of Toronto.</p>
+            <p>Welcome to my personal slice of the internet. I am a computer engineering student at the University of
+                Toronto.</p>
         </section>
 
         <section>
@@ -29,9 +30,13 @@
             </ul>
         </section>
 
-              <section>
-
-        
+        <section>
+            <h3>Visitor Data Tracking</h3>
+            <ul id="tracking-info">
+                <li><em>Loading static user data...</em></li>
+            </ul>
+            
+            <h3>Real-Time Activity</h3>
             <ul id="real-time-info">
                 <li><strong>Cursor Position:</strong> <span id="track-cursor">X: 0, Y: 0</span></li>
                 <li><strong>Time on Page:</strong> <span id="track-time">0s</span></li>
@@ -65,7 +70,7 @@
                         li.innerHTML = `<strong>${key}:</strong> ${value}`;
                         infoList.appendChild(li);
                     }
-
+                    
                     const cursorEl = document.getElementById('track-cursor');
                     const timeEl = document.getElementById('track-time');
                     const scrollEl = document.getElementById('track-scroll');
@@ -82,11 +87,11 @@
                         clickCount++;
                         clicksEl.textContent = clickCount;
                     });
-                    
+
                     document.addEventListener('scroll', () => {
                         scrollEl.textContent = `${window.scrollY}px`;
                     });
-                    
+
                     setInterval(() => {
                         const elapsed = Math.floor((Date.now() - startTime) / 1000);
                         timeEl.textContent = `${elapsed}s`;
