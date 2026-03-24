@@ -28,6 +28,72 @@
                 <li><a href="mailto:hello@example.com">Contact Me</a></li>
             </ul>
         </section>
+
+              <section>
+
+        
+            <ul id="real-time-info">
+                <li><strong>Cursor Position:</strong> <span id="track-cursor">X: 0, Y: 0</span></li>
+                <li><strong>Time on Page:</strong> <span id="track-time">0s</span></li>
+                <li><strong>Scroll Depth:</strong> <span id="track-scroll">0px</span></li>
+                <li><strong>Total Clicks:</strong> <span id="track-clicks">0</span></li>
+            </ul>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", () => {
+                    const infoList = document.getElementById('tracking-info');
+                    
+                    const data = {
+                        'User Agent': navigator.userAgent,
+                        'Platform': navigator.platform || (navigator.userAgentData && navigator.userAgentData.platform) || 'Unknown',
+                        'Language': navigator.language,
+                        'Screen Resolution': `${window.screen.width}x${window.screen.height}`,
+                        'Window Size': `${window.innerWidth}x${window.innerHeight}`,
+                        'Color Depth': `${window.screen.colorDepth}-bit`,
+                        'Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        'Cookies Enabled': navigator.cookieEnabled ? 'Yes' : 'No',
+                        'Online Status': navigator.onLine ? 'Online' : 'Offline',
+                        'Logical Processors (Cores)': navigator.hardwareConcurrency || 'Unknown',
+                        'Device Memory': navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'Unknown',
+                        'Connection Type': navigator.connection ? navigator.connection.effectiveType : 'Unknown',
+                        'Referrer': document.referrer || 'None'
+                    };
+
+                    infoList.innerHTML = '';
+                    for (const [key, value] of Object.entries(data)) {
+                        const li = document.createElement('li');
+                        li.innerHTML = `<strong>${key}:</strong> ${value}`;
+                        infoList.appendChild(li);
+                    }
+
+                    const cursorEl = document.getElementById('track-cursor');
+                    const timeEl = document.getElementById('track-time');
+                    const scrollEl = document.getElementById('track-scroll');
+                    const clicksEl = document.getElementById('track-clicks');
+                    
+                    let startTime = Date.now();
+                    let clickCount = 0;
+
+                    document.addEventListener('mousemove', (e) => {
+                        cursorEl.textContent = `X: ${e.clientX}, Y: ${e.clientY}`;
+                    });
+
+                    document.addEventListener('click', () => {
+                        clickCount++;
+                        clicksEl.textContent = clickCount;
+                    });
+                    
+                    document.addEventListener('scroll', () => {
+                        scrollEl.textContent = `${window.scrollY}px`;
+                    });
+                    
+                    setInterval(() => {
+                        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                        timeEl.textContent = `${elapsed}s`;
+                    }, 1000);
+                });
+            </script>
+        </section>
     </main>
 
     <footer>
